@@ -8,16 +8,15 @@ const pool = new Pool({
 });
 
 export async function initDb() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS users (
+  const tables = [
+    `CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       username TEXT UNIQUE NOT NULL,
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS places (
+    )`,
+    `CREATE TABLE IF NOT EXISTS places (
       id SERIAL PRIMARY KEY,
       google_place_id TEXT UNIQUE,
       name TEXT NOT NULL,
@@ -33,9 +32,8 @@ export async function initDb() {
       overall_risk REAL DEFAULT 0,
       review_count INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS reviews (
+    )`,
+    `CREATE TABLE IF NOT EXISTS reviews (
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       place_id INTEGER NOT NULL REFERENCES places(id) ON DELETE CASCADE,
@@ -46,15 +44,13 @@ export async function initDb() {
       visit_date TEXT,
       helpful_count INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS review_helpful (
+    )`,
+    `CREATE TABLE IF NOT EXISTS review_helpful (
       user_id INTEGER NOT NULL,
       review_id INTEGER NOT NULL,
       PRIMARY KEY (user_id, review_id)
-    );
-
-    CREATE TABLE IF NOT EXISTS community_posts (
+    )`,
+    `CREATE TABLE IF NOT EXISTS community_posts (
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       title TEXT NOT NULL,
@@ -65,22 +61,24 @@ export async function initDb() {
       like_count INTEGER DEFAULT 0,
       comment_count INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS post_likes (
+    )`,
+    `CREATE TABLE IF NOT EXISTS post_likes (
       user_id INTEGER NOT NULL,
       post_id INTEGER NOT NULL,
       PRIMARY KEY (user_id, post_id)
-    );
-
-    CREATE TABLE IF NOT EXISTS comments (
+    )`,
+    `CREATE TABLE IF NOT EXISTS comments (
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       post_id INTEGER NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
       content TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+    )`,
+  ];
+
+  for (const sql of tables) {
+    await pool.query(sql);
+  }
 
   const { rows } = await pool.query('SELECT COUNT(*) as cnt FROM places');
   if (parseInt(rows[0].cnt) === 0) await seedData();
