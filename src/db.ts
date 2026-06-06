@@ -77,7 +77,11 @@ export async function initDb() {
   ];
 
   for (const sql of tables) {
-    await pool.query(sql);
+    try {
+      await pool.query(sql);
+    } catch (e: any) {
+      if (e.code !== '42P07') throw e; // 42P07 = duplicate_table, 이미 존재하면 무시
+    }
   }
 
   const { rows } = await pool.query('SELECT COUNT(*) as cnt FROM places');

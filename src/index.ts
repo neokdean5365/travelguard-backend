@@ -22,11 +22,12 @@ app.use('/api/community', communityRouter);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
-initDb()
-  .then(() => {
-    app.listen(PORT, () => console.log(`🚀 TravelGuard 서버 실행 중: http://localhost:${PORT}`));
-  })
-  .catch((err) => {
-    console.error('DB 초기화 실패:', err);
-    process.exit(1);
-  });
+app.listen(PORT, async () => {
+  console.log(`🚀 TravelGuard 서버 실행 중: http://localhost:${PORT}`);
+  try {
+    await initDb();
+    console.log('✅ DB 초기화 완료');
+  } catch (err) {
+    console.error('⚠️ DB 초기화 경고 (테이블 이미 존재할 수 있음):', err);
+  }
+});

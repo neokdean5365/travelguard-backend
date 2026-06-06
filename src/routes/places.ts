@@ -29,7 +29,7 @@ placesRouter.get('/', optionalAuth, async (req: Request, res: Response) => {
     query += ` AND lat BETWEEN $${i++} AND $${i++} AND lng BETWEEN $${i++} AND $${i++}`;
     params.push(latNum - latDelta, latNum + latDelta, lngNum - lngDelta, lngNum + lngDelta);
   }
-  if (country) { query += ` AND LOWER(country) LIKE $${i++}`; params.push(`%${(country as string).toLowerCase()}%`); }
+  if (country) { query += ` AND (LOWER(country) LIKE $${i} OR LOWER(city) LIKE $${i})`; params.push(`%${(country as string).toLowerCase()}%`); i++; }
   if (category) { query += ` AND category = $${i++}`; params.push(category); }
   if (minRisk) { query += ` AND overall_risk >= $${i++}`; params.push(parseFloat(minRisk as string)); }
   query += ' ORDER BY overall_risk DESC LIMIT 200';
